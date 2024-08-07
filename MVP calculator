@@ -1,0 +1,51 @@
+from nba_api.stats.static import players
+from nba_api.stats.endpoints import playercareerstats, playergamelog
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Define the desired season
+desired_season = "2022-23"  # Replace with the desired season
+
+# Get a list of all NBA players
+nba_players = players.get_players()
+
+# Initialize a list to store player data
+player_data = []
+
+# Loop through the list of players
+for player in nba_players:
+    player_name = player['full_name']
+    player_id = player['id']
+
+    # Retrieve player career statistics
+    career_stats = playercareerstats.PlayerCareerStats(player_id=player_id)
+
+    # Get the DataFrame of player career stats
+    career_stats_df = career_stats.get_data_frames()[0]
+
+    # Filter for the desired season
+    filtered_season = career_stats_df[career_stats_df['SEASON_ID'] == desired_season]
+
+    if not filtered_season.empty:
+        print(f"Processing {player_name}...")
+
+        # Get the player's game log for the desired season
+        game_log = playergamelog.PlayerGameLog(player_id=player_id, season=desired_season)
+        game_log_df = game_log.get_data_frames()[0]
+
+        # Calculate the average points per game (PPG) for this player in the season
+        avg_ppg = game_log_df['PTS'].mean()
+
+        game_log_df['Gmsc'] = game_log_df['PTS'] + 0.4 * game_log_df['FGM'] - 0.7 * game_log_df['FGA'] – 0.4 * (game_log_df['FTA'] - game_log_df['FTM']) + 0.7 * game_log_df['OREB'] + 0.3 * game_log_df['DREB'] +
+        game_log_df['STL'] + 0.7 * game_log_df['AST'] + 0.7 * game_log_df['BLK'] – 0.4 * game_log_df['PF'] - game_log_df['TOV']
+
+
+
+        player_data.append({
+            'Player Name': player_name,
+            'PPG': avg_ppg,
+            'Gamescore': Gmsc
+        })
+
+# Create a DataFrame from the collected player data
+player_data_df = pd.DataFrame(player_data)
